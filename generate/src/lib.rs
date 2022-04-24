@@ -201,6 +201,7 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
                 direction: weight.direction.unwrap(),
                 role: weight.role.unwrap(),
                 node: node.index(),
+                predicate: None,
             };
 
             if self.visited.is_visited(&node) {
