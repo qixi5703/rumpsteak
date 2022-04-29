@@ -17,6 +17,17 @@ pub(crate) enum Predicate {
 }
 
 #[derive(Debug)]
+pub(crate) enum SideEffect {
+    Increase(String, String),
+}
+
+#[derive(Debug)]
+pub(crate) enum Refinement {
+    Predicate,
+    SideEffect
+}
+
+#[derive(Debug)]
 pub(crate) enum Type {
     End,
     Node(usize),
@@ -24,14 +35,14 @@ pub(crate) enum Type {
         direction: Direction,
         role: usize,
         label: usize,
-        predicate: Option<Predicate>,
+        refinement: Option<Refinement>,
         next: Box<Self>,
     },
     Choice {
         direction: Direction,
         role: usize,
         node: usize,
-        predicate: Option<Predicate>,
+        refinement: Option<Refinement>,
     },
 }
 
@@ -43,7 +54,7 @@ impl Type {
                 direction: _,
                 role: _,
                 node: _,
-                predicate: _,
+                refinement: _,
             }
         )
     }
@@ -80,16 +91,16 @@ impl<'a> TypeFormatter<'a> {
         &self.role.nodes[*node]
     }
 
-    fn taut(&self, predicate: &Option<Predicate>) -> String {
+    fn taut(&self, predicate: &Option<Refinement>) -> String {
         if let Some(pred) = predicate {
             match pred {
-                Predicate::LTnVar(a, _) => {
+                Refinement::Predicate::LTnVar(a, _) => {
                     let mut taut = String::from("LTnVar<Value, '");
                     taut = taut + a.as_str();
                     taut = taut + "', 'y'>";
                     return taut;
                 }
-                Predicate::GTnVar(a, _) => {
+                Refinement::Predicate::GTnVar(a, _) => {
                     let mut taut = String::from("GTnVar<Value, '");
                     taut = taut + a.as_str();
                     taut = taut + "', 'y'>";
@@ -100,14 +111,10 @@ impl<'a> TypeFormatter<'a> {
         return "Tautology<Name, Value>".to_string();
     }
 
-    fn effect(&self, predicate: &Option<Predicate>) -> String {
+    fn effect(&self, predicate: &Option<Refinement>) -> String {
         if let Some(pred) = predicate {
             match pred {
-                Predicate::LTnVar(_, _) => {
-                    let effect = String::from("Constant<Name, Value>");
-                    return effect;
-                }
-                Predicate::GTnVar(_, _) => {
+                Refinement::SideEffect::Increase(_, _) => {
                     let effect = String::from("Constant<Name, Value>");
                     return effect;
                 }
@@ -129,14 +136,14 @@ impl Display for TypeFormatter<'_> {
                 direction,
                 role,
                 label,
-                predicate,
+                refinement: refinement,
                 next,
             } => {
                 let (other, label, taut, effect, next) = (
                     self.role(role),
                     self.label(label),
-                    self.taut(predicate),
-                    self.effect(predicate),
+                    self.taut(refinement),
+                    self.effect(refinement),
                     self.with(next),
                 );
                 match direction {
@@ -156,7 +163,7 @@ impl Display for TypeFormatter<'_> {
                 direction,
                 role,
                 node,
-                predicate,
+                refinement: predicate,
             } => {
                 let other = self.role(role);
                 let (other, name, role, node, taut, effect) = (self.role(role), self.name, &self.role.camel, self.node(node), self.taut(predicate),

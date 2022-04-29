@@ -13,6 +13,7 @@ use petgraph::{
     graph::{node_index, NodeIndex},
     visit::{EdgeRef, IntoNodeReferences, VisitMap, Visitable},
 };
+use template::{SideEffect, Refinement};
 use std::{error::Error, fs, io, path::Path, result, str};
 
 type Result<T, E = Box<dyn Error>> = result::Result<T, E>;
@@ -182,7 +183,7 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
                     direction: weight.direction.unwrap(),
                     role: weight.role.unwrap(),
                     label: edge.weight().label,
-                    predicate: predicate,
+                    refinement: predicate,
                     next: next.into(),
                 };
 
@@ -201,7 +202,7 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
                 direction: weight.direction.unwrap(),
                 role: weight.role.unwrap(),
                 node: node.index(),
-                predicate: None,
+                refinement: None,
             };
 
             if self.visited.is_visited(&node) {
@@ -271,7 +272,7 @@ fn generate_labels(labels: &IndexMap<&str, Vec<(&str, &str)>>) -> Vec<Label> {
     labels.iter().map(generate_label).collect()
 }
 
-fn parse_expr(pred: Option<&str>) -> Option<Predicate> {
+fn parse_expr(pred: Option<&str>) -> Option<Refinement> {
     if pred.is_none() {
         return None;
     }
@@ -283,27 +284,40 @@ fn parse_expr(pred: Option<&str>) -> Option<Predicate> {
         .map(str::from_utf8)
         .collect::<Result<Vec<&str>, _>>()
         .unwrap();
-    if items.len() < 3 {
+    if items.len() == 3 {
+        match items[1] {
+            "<" => {
+                return Some(Refinement::Predicate::LTnVar(
+                    items[0].to_string(),
+                    items[2].to_string(),
+                ))
+            }
+            ">" => {
+                return Some(Refinement::Predicate::GTnVar(
+                    items[0].to_string(),
+                    items[2].to_string(),
+                ))
+            }
+            _ => {
+                eprintln!("Unsupported refinement type");
+                return None;
+            }
+        }
+    } else if items.len() == 4 {
+        match items[2] {
+            "+" => {
+                return Some(Refinement::SideEffect::Increase(
+                    items[0].to_string(),
+                    items[3].to_string(),
+                ))
+            }
+            _ => {
+                eprintln!("Unsupported refinement type");
+                return None;
+            }
+        }
+    } else {
         eprintln!("Incorrect refinement format: {:#?}", pred.unwrap());
         return None;
-    }
-
-    match items[1] {
-        "<" => {
-            return Some(Predicate::LTnVar(
-                items[0].to_string(),
-                items[2].to_string(),
-            ))
-        }
-        ">" => {
-            return Some(Predicate::GTnVar(
-                items[0].to_string(),
-                items[2].to_string(),
-            ))
-        }
-        _ => {
-            eprintln!("Unsupported refinement type");
-            return None;
-        }
     }
 }

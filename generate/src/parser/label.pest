@@ -9,7 +9,9 @@ send = { "!" }
 receive = { "?" }
 
 predicate = { ident ~ ("<" | ">") ~ ident }
+side_effect = { ident ~ "="  ~ ident "+" ~ ident }
+refinement = predicate | side_effect
 
 param = { ident ~ ":" ~ ident }
 parameters = { (param ~ ",")* ~ param? }
-label = { "\""? ~ ident ~ (send | receive) ~ ident ~ "(" ~ parameters ~ ")" ~ ( ":" ~ predicate)? ~ "\"" }
+label = { "\""? ~ ident ~ (send | receive) ~ ident ~ "(" ~ parameters ~ ")" ~ ( ":" ~ refinement)? ~ "\"" }
