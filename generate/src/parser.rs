@@ -76,7 +76,7 @@ impl<'a> TryFrom<(DotGraph<'a, label::Label<'a>>, &mut Context<'a>)> for Digraph
 
         for edge in edges {
             let attr = edge.attr.unwrap().elems[0].elems[0].clone();
-            let (role, direction, payload, params, predicate) = attr.fields();
+            let (role, direction, payload, params, predicate, side_effect) = attr.fields();
 
             if !context.labels.contains_key(payload) {
                 context.labels.insert(payload, params);
@@ -91,7 +91,7 @@ impl<'a> TryFrom<(DotGraph<'a, label::Label<'a>>, &mut Context<'a>)> for Digraph
             let to_index = node_indexes[to];
             graph[from_index].direction = Some(direction.into());
             graph[from_index].role = Some(role_index);
-            let edge = GraphEdge::new(payload_index, predicate.into());
+            let edge = GraphEdge::new(payload_index, predicate.into(), side_effect.into());
             graph.add_edge(from_index, to_index, edge);
         }
 
@@ -328,6 +328,7 @@ mod label {
     #[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
     pub(in crate) enum Predicate<'a> {
         LTnConst(&'a str, &'a str),
+        GTnConst(&'a str, &'a str),
         None,
     }
 
@@ -337,8 +338,27 @@ mod label {
                 Predicate::LTnConst(a, b) => {
                     super::super::Predicate::LTnConst(a.to_string(), b.to_string())
                 }
+                Predicate::GTnConst(a, b) => {
+                    super::super::Predicate::GTnConst(a.to_string(), b.to_string())
+                }
                 Predicate::None => super::super::Predicate::None,
-                // Predicate::Receive => super::super::Direction::Receive,
+            }
+        }
+    }
+
+    #[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
+    pub(in crate) enum SideEffect<'a> {
+        Increase(&'a str, &'a str),
+        None,
+    }
+
+    impl<'a> Into<super::super::SideEffect> for SideEffect<'a> {
+        fn into(self) -> super::super::SideEffect {
+            match self {
+                SideEffect::Increase(a, b) => {
+                    super::super::SideEffect::Increase(a.to_string(), b.to_string())
+                }
+                SideEffect::None => super::super::SideEffect::None,
             }
         }
     }
@@ -350,6 +370,7 @@ mod label {
         pub(in crate) payload: &'a str,
         pub(in crate) parameters: Vec<(&'a str, &'a str)>, // (name, type)
         pub(in crate) predicate: Predicate<'a>,
+        pub(in crate) side_effect: SideEffect<'a>,
     }
 
     impl<'a> Label<'a> {
@@ -373,24 +394,42 @@ mod label {
                     }
                 }
                 let mut predicate = Predicate::None;
-                if let Some(p) = inner.next() {
-                    let mut inner = p.clone().into_inner();
-                    let x = inner.next().unwrap().as_str();
-                    let op = inner.next().unwrap();
-                    let y = inner.next().unwrap().as_str();
-                    match op.as_rule() {
-                        Rule::ltn => predicate = Predicate::LTnConst(x, y),
+                let mut side_effect = SideEffect::None;
+                while let Some(p) = inner.next() {
+                    match p.as_rule() {
+                        Rule::predicate => {
+                            let mut inner = p.clone().into_inner();
+                            let param = inner.next().unwrap().as_str();
+                            let op = inner.next().unwrap();
+                            let value = inner.next().unwrap().as_str();
+                            match op.as_rule() {
+                                Rule::ltn => predicate = Predicate::LTnConst(param, value),
+                                Rule::gtn => predicate = Predicate::GTnConst(param, value),
+                                _ => (),
+                            }
+                        }
+                        Rule::side_effect => {
+                            let mut inner = p.clone().into_inner();
+                            let param1 = inner.next().unwrap().as_str();
+                            let param2 = inner.next().unwrap().as_str();
+                            assert_eq!(param1, param2);
+                            let op = inner.next().unwrap();
+                            let value = inner.next().unwrap().as_str();
+                            match op.as_rule() {
+                                Rule::incr => side_effect = SideEffect::Increase(param1, value),
+                                _ => (),
+                            }
+                        }
                         _ => (),
                     }
-                };
-
-                // let predicate = inner.next().map(|p| p.as_str());
+                }
                 Ok(Label {
                     role,
                     direction,
                     payload,
                     parameters,
                     predicate,
+                    side_effect,
                 })
             } else {
                 Err(())
@@ -413,6 +452,7 @@ mod label {
             &'a str,
             Vec<(&'a str, &'a str)>,
             Predicate<'a>,
+            SideEffect<'a>,
         ) {
             (
                 self.role,
@@ -420,6 +460,7 @@ mod label {
                 self.payload,
                 self.parameters,
                 self.predicate,
+                self.side_effect,
             )
         }
     }
