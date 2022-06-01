@@ -4,6 +4,7 @@ use futures::{
 };
 #[allow(unused_imports)]
 use ::rumpsteak::{
+<<<<<<< HEAD
     channel::Bidirectional,
     session,
     Branch,
@@ -25,6 +26,9 @@ use ::rumpsteak::{
         LTnVar,
         GTnVar
     },
+=======
+    channel::Bidirectional, session, Branch, End, Message, Receive, Role, Roles, Select, Send, formula,
+>>>>>>> 2a26e53e21b947caa80d8e0e3d4df7fe174659a8
 };
 
 use std::collections::HashMap;

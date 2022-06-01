@@ -47,12 +47,23 @@ impl<'a> GraphNode<'a> {
 #[derive(Debug)]
 struct GraphEdge<'a> {
     label: usize,
+<<<<<<< HEAD
     predicate: Option<&'a str>,
+=======
+    predicate: Option<&'a str>
+>>>>>>> 2a26e53e21b947caa80d8e0e3d4df7fe174659a8
 }
 
 impl<'a> GraphEdge<'a> {
     fn new(label: usize, predicate: Option<&'a str>) -> Self {
+<<<<<<< HEAD
         Self { label, predicate }
+=======
+        Self {
+            label,
+            predicate,
+        }
+>>>>>>> 2a26e53e21b947caa80d8e0e3d4df7fe174659a8
     }
 }
 
@@ -256,10 +267,14 @@ fn generate_roles(roles: &[(&str, Graph<'_>)]) -> Vec<Role> {
 }
 
 fn generate_label((label, parameters): (&&str, &Vec<(&str, &str)>)) -> Label {
+<<<<<<< HEAD
     let parameters = parameters
         .iter()
         .cloned()
         .map(|(n, t)| (n.to_owned(), t.to_owned()));
+=======
+    let parameters = parameters.iter().cloned().map(|(n, t)| (n.to_owned(), t.to_owned()));
+>>>>>>> 2a26e53e21b947caa80d8e0e3d4df7fe174659a8
     let (names, types): (Vec<String>, Vec<String>) = parameters.unzip();
     Label {
         camel: label.to_camel_case(),

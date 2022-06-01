@@ -8,6 +8,7 @@ ident = { quoted_ident | raw_ident }
 send = { "!" }
 receive = { "?" }
 
+<<<<<<< HEAD
 predicate = { ident ~ ("<" | ">") ~ ident }
 side_effect = { ident ~ "="  ~ ident "+" ~ ident }
 refinement = predicate | side_effect
@@ -15,3 +16,12 @@ refinement = predicate | side_effect
 param = { ident ~ ":" ~ ident }
 parameters = { (param ~ ",")* ~ param? }
 label = { "\""? ~ ident ~ (send | receive) ~ ident ~ "(" ~ parameters ~ ")" ~ ( ":" ~ refinement)? ~ "\"" }
+=======
+predicate = { ident ~ "<" ~ ident }
+
+param = { ident ~ ":" ~ ident }
+parameters = { (param ~ ",")* ~ param? }
+label = { "\""? ~ ident ~ (send | receive) ~ ident ~ "(" ~ parameters ~ ")" ~ ( ":" ~ predicate)? ~ "\"" }
+
+WHITESPACE = _{ " " }
+>>>>>>> 2a26e53e21b947caa80d8e0e3d4df7fe174659a8
