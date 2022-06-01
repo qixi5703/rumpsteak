@@ -212,26 +212,45 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
                 direction: weight.direction.unwrap(),
                 role: weight.role.unwrap(),
                 node: node.index(),
-                predicate: Predicate::None,
+                predicate: vec![],
                 side_effect: SideEffect::None,
             };
 
             if self.visited.is_visited(&node) {
+                // eprintln!("here:{:#?}", ty);
                 self.looped.visit(node);
+                // eprintln!("here:{:#?}", ty);
                 return (ty, true);
             }
             self.visited.visit(node);
 
+            let mut preds = Vec::new();
             let choices = edges
-                .map(|edge| Choice {
+                .map(|edge| {
+                    let real_edge = edge.weight();
+                    eprintln!("{:#?}, {:#?}, {:#?}, {:#?}",edge.source(), edge.target(), edge.weight().label, edge.weight().predicate);
+                    preds.push(edge.weight().predicate.clone());
+                    Choice {
                     label: edge.weight().label,
+                    pred: (),
                     ty: self.visit(edge.target()).0,
-                })
+                }})
                 .collect::<Vec<_>>();
-            self.definitions.push(Definition {
+            self.definitions.push(
+                Definition {
                 node: node.index(),
                 body: DefinitionBody::Choice(choices),
             });
+
+            eprintln!("here:{:#?}", ty);
+
+            let ty = Type::Choice {
+                direction: weight.direction.unwrap(),
+                role: weight.role.unwrap(),
+                node: node.index(),
+                predicate: preds,
+                side_effect: SideEffect::None,
+            };
 
             (ty, true)
         }
@@ -243,6 +262,7 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
 
     let ty = visitor.visit(root).0;
     if ty.is_choice() {
+        eprintln!("{:#?}", ty);
         visitor.definitions.push(Definition {
             node: root.index(),
             body: DefinitionBody::Type { safe: true, ty },

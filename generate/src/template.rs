@@ -12,7 +12,9 @@ pub(crate) struct Route(pub usize);
 
 #[derive(Clone, Debug)]
 pub(crate) enum Predicate {
+    LTnVar(String, String),
     LTnConst(String, String),
+    GTnVar(String, String),
     GTnConst(String, String),
     None,
 }
@@ -39,7 +41,7 @@ pub(crate) enum Type {
         direction: Direction,
         role: usize,
         node: usize,
-        predicate: Predicate,
+        predicate: Vec<Predicate>,
         side_effect: SideEffect,
     },
 }
@@ -92,26 +94,75 @@ impl<'a> TypeFormatter<'a> {
 
     fn pred(&self, predicate: &Predicate) -> String {
         match predicate {
-            Predicate::LTnConst(param, value) => {
-                let mut pred = String::from("LTnConst<Value, '");
+            Predicate::LTnVar(param, value) => {
+                let mut pred = String::from("LTnConst<Label, Value, '");
                 pred = pred + param.as_str();
                 pred = pred + "', '";
                 pred = pred + value;
                 pred = pred + "'>";
-                return pred;
+                pred
+            }
+            Predicate::LTnConst(param, value) => {
+                let mut pred = String::from("LTnConst<Label, '");
+                pred = pred + param.as_str();
+                pred = pred + "', ";
+                pred = pred + value;
+                pred = pred + ">";
+                pred
+            }
+            Predicate::GTnVar(param, value) => {
+                let mut pred = String::from("GTnConst<Label, Value, '");
+                pred = pred + param.as_str();
+                pred = pred + "', '";
+                pred = pred + value;
+                pred = pred + "'>";
+                pred
             }
             Predicate::GTnConst(param, value) => {
-                let mut pred = String::from("GTnConst<Value, '");
+                let mut pred = String::from("GTnConst<Label, '");
                 pred = pred + param.as_str();
-                pred = pred + "', '";
+                pred = pred + "', ";
                 pred = pred + value;
-                pred = pred + "'>";
-                return pred;
+                pred = pred + ">";
+                pred
             }
-            Predicate::None => (),
+            Predicate::None => {
+                "Tautology<Name, Value, Label>".to_string()
+            },
         }
-        return "Tautology<Name, Value>".to_string();
     }
+
+    fn preds(&self, predicates: &Vec<Predicate>) -> String {
+        let mut ret = String::from("AdHocPred<Label, ").to_owned();
+        for predicate in predicates {
+            ret = ret + &self.pred(&predicate);
+            ret = ret + ", ";
+        }
+        // match predicate {
+        //     Predicate::LTnConst(param, value) => {
+        //         let mut pred = String::from("LTnConst<Value, '");
+        //         pred = pred + param.as_str();
+        //         pred = pred + "', '";
+        //         pred = pred + value;
+        //         pred = pred + "'>";
+        //         pred
+        //     }
+        //     Predicate::GTnConst(param, value) => {
+        //         let mut pred = String::from("GTnConst<Value, '");
+        //         pred = pred + param.as_str();
+        //         pred = pred + "', '";
+        //         pred = pred + value;
+        //         pred = pred + "'>";
+        //         pred
+        //     }
+        //     Predicate::None => {
+        //         "Tautology<Name, Value>".to_string()
+        //     },
+        // }
+        ret = ret + ">";
+        ret
+    }
+
 
     fn effect(&self, side_effect: &SideEffect) -> String {
         match side_effect {
@@ -178,7 +229,7 @@ impl Display for TypeFormatter<'_> {
                     self.name,
                     &self.role.camel,
                     self.node(node),
-                    self.pred(predicate),
+                    self.preds(predicate),
                     self.effect(side_effect),
                 );
                 match direction {
@@ -192,8 +243,8 @@ impl Display for TypeFormatter<'_> {
                     Direction::Receive => {
                         write!(
                             f,
-                            "Branch<{}, {}, {}, {}{}{}>",
-                            other, pred, effect, name, role, node
+                            "Branch<{}, Tautology<Name, Value, Label>, {}, {}{}{}>",
+                            other, effect, name, role, node
                         )
                     }
                 }
@@ -205,6 +256,7 @@ impl Display for TypeFormatter<'_> {
 #[derive(Debug)]
 pub(crate) struct Choice {
     pub label: usize,
+    pub pred: (),
     pub ty: Type,
 }
 

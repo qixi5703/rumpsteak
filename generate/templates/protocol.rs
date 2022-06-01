@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use futures::{
     channel::mpsc::{UnboundedReceiver, UnboundedSender},
     executor, try_join,
@@ -21,10 +22,14 @@ use ::rumpsteak::{
     },
     try_session,
     predicate::{
+        Predicate,
         Tautology,
         LTnVar,
-        GTnVar
+        GTnVar,
+        LTnConst,
+        GTnConst
     },
+
 };
 
 use std::collections::HashMap;
@@ -34,6 +39,34 @@ type Channel = Bidirectional<UnboundedSender<Label>, UnboundedReceiver<Label>>;
 type Name = {{ name_str }};
 type Value = {{ value_str }};
 
+pub struct AdHocPred<L, LHS: Predicate, RHS: Predicate> {
+    _p: PhantomData<(L, LHS, RHS)>
+}
+
+impl<L, LHS: Predicate, RHS: Predicate> Default for AdHocPred<L, LHS, RHS> {
+    fn default() -> Self { Self { _p: PhantomData} }
+}
+
+impl<L, LHS: Predicate, RHS: Predicate> Predicate for AdHocPred<L, LHS, RHS>
+{
+    type Name = name_str;
+    type Value = value_str;
+    type Label = L;
+    type Error = ();
+
+    fn check(&self, m: &HashMap<Self::Name, Self::Value>, l: Option<&Self::Label>) -> Result<(), Self::Error> {
+        
+        if let Some(l) = l {
+            match l {
+                l1 => LHS::default().check(m, None),
+                l2 => RHS::default().check(m, None),
+                _ => Err(())
+            }
+        } else {
+            Ok(())
+        }
+    }
+}
 #[derive(Roles)]
 #[allow(dead_code)]
 struct Roles {
@@ -64,6 +97,7 @@ struct {{ label.camel }}{% if !label.parameters.is_empty() -%}
 {%- endif %};
 {% endfor %}
 {%- for role in roles %}
+// role {{role.camel}}
 {%- for (i, definition) in role.definitions.iter().rev().enumerate() %}
 {%- let node = role.nodes[definition.node] %}
 #[session(Name, Value)]
@@ -81,6 +115,8 @@ enum {{ camel }}{{ role.camel }}{{ node }} {
     {{ label.camel }}({{ label.camel }}, {{ choice.ty|ty(camel, role, roles, labels) }}),
 {%- endfor %}
 }
+
+
 {%- endmatch %}
 {% endfor %}
 {%- endfor %}

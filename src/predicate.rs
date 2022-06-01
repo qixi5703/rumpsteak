@@ -142,6 +142,31 @@ impl<L, const LHS: char, const RHS: i32> Predicate for LTnConst<L, LHS, RHS>
     }
 }
 
+pub struct GTnConst<L, const LHS: char, const RHS: i32> {
+    _p: PhantomData<L>
+}
+
+impl<L, const LHS: char, const RHS: i32> Default for GTnConst<L, LHS, RHS> {
+    fn default() -> Self { Self { _p: PhantomData} }
+}
+
+impl<L, const LHS: char, const RHS: i32> Predicate for GTnConst<L, LHS, RHS>
+{
+    type Name = char;
+    type Value = i32;
+    type Label = L;
+    type Error = ();
+
+    fn check(&self, m: &HashMap<Self::Name, Self::Value>, _l: Option<&Self::Label>) -> Result<(), Self::Error> {
+        let lhs = m.get(&LHS).ok_or(())?;
+        if lhs > &RHS {
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+}
+
 
 pub struct LTn<N, V> {
     lhs: N,
