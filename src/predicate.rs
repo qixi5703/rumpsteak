@@ -54,6 +54,7 @@ impl<N, V> Predicate for Tautology<N, V> {
     type Error = ();
 }
 
+/// The `LTnVar` struct implements an operator (less than a variable).
 pub struct LTnVar<V: Ord, const LHS: char, const RHS: char> {
     _p: PhantomData<V>,
 }
@@ -83,6 +84,7 @@ where
     }
 }
 
+/// The `GTnVar` struct implements an operator (greater than a variable).
 pub struct GTnVar<V: Ord, const LHS: char, const RHS: char> {
     _p: PhantomData<V>,
 }
@@ -112,7 +114,7 @@ where
     }
 }
 
-
+/// The `LTnConst` struct implements an operator (less than a value).
 pub struct LTnConst<const LHS: char, const RHS: i32> {}
 
 impl<const LHS: char, const RHS: i32> Default for LTnConst<LHS, RHS> {
@@ -135,6 +137,28 @@ impl<const LHS: char, const RHS: i32> Predicate for LTnConst<LHS, RHS>
     }
 }
 
+/// The `GTnConst` struct implements an operator (less than a value).
+pub struct GTnConst<const LHS: char, const RHS: i32> {}
+
+impl<const LHS: char, const RHS: i32> Default for GTnConst<LHS, RHS> {
+    fn default() -> Self { Self {} }
+}
+
+impl<const LHS: char, const RHS: i32> Predicate for GTnConst<LHS, RHS>
+{
+    type Name = char;
+    type Value = i32;
+    type Error = ();
+
+    fn check(&self, m: &HashMap<Self::Name, Self::Value>) -> Result<(), Self::Error> {
+        let lhs = m.get(&LHS).ok_or(())?;
+        if lhs > &RHS {
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+}
 
 pub struct LTn<N, V> {
     lhs: N,
