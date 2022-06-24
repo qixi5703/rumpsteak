@@ -188,7 +188,10 @@ where
             Err(())
         }
     }
+    
 }
+
+
 
 /// The `EqualConst` struct implements an operator (equal to a value).
 pub struct EqualConst<const LHS: char, const RHS: i32> {}
@@ -273,6 +276,79 @@ where
             Err(())
         }
     }
+}
+
+/// The `And` struct implements an and operator (e.g. pred1 and pred 2).
+pub struct And<LHS: Predicate, RHS: Predicate, N, V> {
+    _p: PhantomData<(LHS, RHS, N, V)>
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, RHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Default for And<LHS, RHS, N, V> {
+    fn default() -> Self { Self { _p: PhantomData} }
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, RHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Predicate for And<LHS, RHS, N, V>
+{
+     type Name = N;
+     type Value = V;
+     type Error = ();
+
+     fn check(&self, m: &HashMap<Self::Name, Self::Value>) -> Result<(), Self::Error> {
+
+        if LHS::default().check(m).is_ok() && RHS::default().check(m).is_ok() {
+            Ok(())
+        } else {
+            Err(())
+        }
+     }
+}
+
+pub struct Or<LHS: Predicate, RHS: Predicate, N, V> {
+    _p: PhantomData<(LHS, RHS, N, V)>
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, RHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Default for Or<LHS, RHS, N, V> {
+    fn default() -> Self { Self { _p: PhantomData} }
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, RHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Predicate for Or<LHS, RHS, N, V>
+{
+     type Name = N;
+     type Value = V;
+     type Error = ();
+
+     fn check(&self, m: &HashMap<Self::Name, Self::Value>) -> Result<(), Self::Error> {
+
+        if LHS::default().check(m).is_ok() || RHS::default().check(m).is_ok() {
+            Ok(())
+        } else {
+            Err(())
+        }
+     }
+}
+
+pub struct Neg<LHS: Predicate, N, V> {
+    _p: PhantomData<(LHS, N, V)>
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Default for Neg<LHS, N, V> {
+    fn default() -> Self { Self { _p: PhantomData} }
+}
+
+impl<LHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Predicate for Neg<LHS, N, V>
+{
+     type Name = N;
+     type Value = V;
+     type Error = ();
+
+     fn check(&self, m: &HashMap<Self::Name, Self::Value>) -> Result<(), Self::Error> {
+
+        if LHS::default().check(m).is_ok() {
+            Ok(())
+        } else {
+            Err(())
+        }
+     }
 }
 
 pub struct LTn<N, V> {

@@ -6,7 +6,7 @@ pub use self::template::Protocol;
 use self::{
     parser::Tree,
     template::{
-        Choice, Definition, DefinitionBody, Label, Predicate, Role, Route, SideEffect, Type,
+        BoolPredicate, Predicate, Choice, Definition, DefinitionBody, Label, Role, Route, SideEffect, Type,
     },
 };
 use heck::{CamelCase, SnakeCase};
@@ -48,13 +48,13 @@ impl<'a> GraphNode<'a> {
 #[derive(Debug)]
 struct GraphEdge<'a> {
     label: usize,
-    predicate: Predicate,
+    predicate: BoolPredicate,
     side_effect: SideEffect,
     _marker: PhantomData<&'a usize>,
 }
 
 impl<'a> GraphEdge<'a> {
-    fn new(label: usize, predicate: Predicate, side_effect: SideEffect) -> Self {
+    fn new(label: usize, predicate: BoolPredicate, side_effect: SideEffect) -> Self {
         Self {
             label,
             predicate,
@@ -212,7 +212,7 @@ fn generate_definitions(graph: &Graph<'_>) -> Vec<Definition> {
                 direction: weight.direction.unwrap(),
                 role: weight.role.unwrap(),
                 node: node.index(),
-                predicate: Predicate::None,
+                predicate: BoolPredicate::None,
                 side_effect: SideEffect::None,
             };
 
