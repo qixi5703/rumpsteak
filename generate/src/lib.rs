@@ -6,7 +6,8 @@ pub use self::template::Protocol;
 use self::{
     parser::Tree,
     template::{
-        BoolPredicate, Predicate, Choice, Definition, DefinitionBody, Label, Role, Route, SideEffect, Type,
+        BoolPredicate, Choice, Definition, DefinitionBody, Label, Predicate, Role, Route,
+        SideEffect, Type,
     },
 };
 use heck::{CamelCase, SnakeCase};
