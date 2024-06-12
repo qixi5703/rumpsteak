@@ -471,6 +471,21 @@ impl<const VAR: char> IntExpr for Value<VAR> {
 }
 
 #[derive(Default)]
+struct Constant<const CST: i32> {}
+
+impl<const CST: i32> IntExpr for Constant<CST> {
+    type Name = char;
+    type Value = i32;
+    type Error = ();
+
+    fn value(&self, 
+        _m: &HashMap<Self::Name, Self::Value>,
+        ) -> Result<Self::Value, Self::Error> {
+        Ok(CST)
+    }
+}
+
+#[derive(Default)]
 struct Exponent<LHS, RHS> 
 where LHS: IntExpr,
       RHS: IntExpr
@@ -521,5 +536,44 @@ where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
 
         
         lhs.checked_rem(rhs).ok_or(())
+    }
+}
+
+/// The `Equal` struct implements an equality operator.
+pub struct Equal<V: Ord, N, L, LHS: IntExpr, RHS: IntExpr> {
+    _p: PhantomData<(V, N, L, LHS, RHS)>,
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Default for Equal<V, N, L, LHS, RHS> {
+    fn default() -> Self {
+        Self {
+            _p: PhantomData
+        }
+    }
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Predicate for Equal<V, N, L, LHS, RHS>
+where
+    V: std::cmp::Ord,
+    LHS: IntExpr<Name = N, Value = V, Error = ()>,
+    RHS: IntExpr<Name = N, Value = V, Error = ()>
+{
+    type Name = N;
+    type Value = V;
+    type Label = L;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        _l: Option<&Self::Label>,
+    ) -> Result<(), Self::Error> {
+        let lhs = LHS::default().value(m)?;
+        let rhs = RHS::default().value(m)?;
+        if lhs == rhs {
+            Ok(())
+        } else {
+            Err(())
+        }
     }
 }
