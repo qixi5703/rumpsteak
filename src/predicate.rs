@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::convert::TryInto;
 
 use std::cmp::Ord;
 
@@ -441,5 +442,84 @@ impl<L, LHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Predicate for Neg
         } else {
             Ok(())
         }
+    }
+}
+
+trait IntExpr: Default {
+    type Name;
+    type Value;
+    type Error;
+
+    fn value(&self,
+        m: &HashMap<Self::Name, Self::Value>,
+        ) -> Result<Self::Value, Self::Error>;
+}
+
+#[derive(Default)]
+struct Value<const VAR: char> {}
+
+impl<const VAR: char> IntExpr for Value<VAR> {
+    type Name = char;
+    type Value = i32;
+    type Error = ();
+
+    fn value(&self, 
+        m: &HashMap<Self::Name, Self::Value>,
+        ) -> Result<Self::Value, Self::Error> {
+        m.get(&VAR).ok_or(()).copied()
+    }
+}
+
+#[derive(Default)]
+struct Exponent<LHS, RHS> 
+where LHS: IntExpr,
+      RHS: IntExpr
+{
+    _p: PhantomData<(LHS, RHS)>
+}
+
+impl<LHS, RHS> IntExpr for Exponent<LHS, RHS>
+where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
+      RHS: IntExpr<Name = char, Value = i32, Error = ()>
+{
+    type Name = char;
+    type Value = i32;
+    type Error = ();
+
+    fn value(&self,
+        m: &HashMap<Self::Name, Self::Value>,
+        ) -> Result<Self::Value, Self::Error> {
+        let lhs = LHS::default().value(m)?;
+        let rhs: u32 = RHS::default().value(m)?.try_into().map_err(|_| ())?;
+
+        
+        lhs.checked_pow(rhs).ok_or(())
+    }
+}
+
+#[derive(Default)]
+struct Modulo<LHS, RHS>
+where LHS: IntExpr,
+      RHS: IntExpr
+{
+    _p: PhantomData<(LHS, RHS)>
+}
+
+impl<LHS, RHS> IntExpr for Modulo<LHS, RHS>
+where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
+      RHS: IntExpr<Name = char, Value = i32, Error = ()>
+{
+    type Name = char;
+    type Value = i32;
+    type Error = ();
+
+    fn value(&self,
+        m: &HashMap<Self::Name, Self::Value>,
+        ) -> Result<Self::Value, Self::Error> {
+        let lhs = LHS::default().value(m)?;
+        let rhs = RHS::default().value(m)?;
+
+        
+        lhs.checked_rem(rhs).ok_or(())
     }
 }
