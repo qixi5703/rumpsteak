@@ -189,6 +189,7 @@ impl<L, const LHS: char, const RHS: i32> Predicate for GTnConst<L, LHS, RHS> {
 }
 
 /// The `EqualVar` struct implements an operator (equal to a variable).
+#[deprecated(note="Use Equal, Value, and Constant instead")]
 pub struct EqualVar<V: Ord, L, const LHS: char, const RHS: char> {
     _p: PhantomData<(V, L)>,
 }
