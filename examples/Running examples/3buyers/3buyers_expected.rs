@@ -1,94 +1,387 @@
-use ::futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
+use futures::{
+    channel::mpsc::{UnboundedReceiver, UnboundedSender},
+    executor, try_join,
+};
 #[allow(unused_imports)]
 use ::rumpsteak::{
-    channel::Bidirectional, session, Branch, End, Message, Receive, Role, Roles, Select, Send,
+    channel::Bidirectional,
+    session,
+    Branch,
+    End,
+    Message,
+    Receive,
+    Role,
+    Roles,
+    Select,
+    Send,
+    effect::{
+        SideEffect,
+        Constant,
+        Incr,
+    },
+    try_session,
+    predicate::*,
+    ParamName,
+    Param,
 };
 
+use std::collections::HashMap;
+use std::error::Error;
+
 type Channel = Bidirectional<UnboundedSender<Label>, UnboundedReceiver<Label>>;
+
+type Name = char;
+type Value = i32;
 
 #[derive(Roles)]
 #[allow(dead_code)]
 struct Roles {
-    c: C,
-    s: S,
     a: A,
-}
-
-#[derive(Role)]
-#[message(Label)]
-struct C {
-    #[route(S)]
-    s: Channel,
-    #[route(A)]
-    a: Channel,
-}
-
-#[derive(Role)]
-#[message(Label)]
-struct S {
-    #[route(C)]
-    c: Channel,
-    #[route(A)]
-    a: Channel,
+    b: B,
+    s: S,
 }
 
 #[derive(Role)]
 #[message(Label)]
 struct A {
-    #[route(C)]
-    c: Channel,
+    #[route(B)]
+    b: Channel,
     #[route(S)]
     s: Channel,
 }
 
-#[derive(Message)]
+#[derive(Role)]
+#[message(Label)]
+struct B {
+    #[route(A)]
+    a: Channel,
+    #[route(S)]
+    s: Channel,
+}
+
+#[derive(Role)]
+#[message(Label)]
+struct S {
+    #[route(A)]
+    a: Channel,
+    #[route(B)]
+    b: Channel,
+}
+
+#[derive(Message, Copy, Clone)]
 enum Label {
-    Empty3(Empty3),
-    Empty4(Empty4),
-    Valid(Valid),
-    Quit(Quit),
-    Empty5(Empty5),
-    Empty1(Empty1),
-    Empty2(Empty2),
+    Request(Request),
+    QuoteAlice(QuoteAlice),
+    ParticipationBob(ParticipationBob),
+    ConfirmAlice(ConfirmAlice),
+    QuitAlice(QuitAlice),
+    QuoteBob(QuoteBob),
+    ConfirmSeller(ConfirmSeller),
+    Date(Date),
+    QuitSeller(QuitSeller),
 }
 
-struct Empty3(i32);
-
-struct Empty4(i32);
-
-struct Valid(i32);
-
-struct Quit;
-
-struct Empty5(i32);
-
-struct Empty1(i32);
-
-struct Empty2(i32);
-
-#[session]
-type ThreeBuyersC = Receive<S, Empty3, Receive<A, Empty4, Select<A, ThreeBuyersC2>>>;
-
-#[session]
-enum ThreeBuyersC2 {
-    Quit(Quit, Send<S, Quit, End>),
-    Valid(Valid, Send<S, Valid, Receive<S, Empty5, End>>),
+impl From<Label> for Value {
+    fn from(label: Label) -> Value {
+        match label {
+            Label::Request(payload) => payload.into(),
+            Label::QuoteAlice(payload) => payload.into(),
+            Label::ParticipationBob(payload) => payload.into(),
+            Label::ConfirmAlice(payload) => payload.into(),
+            Label::QuitAlice(payload) => payload.into(),
+            Label::QuoteBob(payload) => payload.into(),
+            Label::ConfirmSeller(payload) => payload.into(),
+            Label::Date(payload) => payload.into(),
+            Label::QuitSeller(payload) => payload.into(),
+        }
+    }
 }
 
-#[session]
-type ThreeBuyersS = Receive<A, Empty1, Send<A, Empty2, Send<C, Empty3, Branch<C, ThreeBuyersS3>>>>;
 
-#[session]
-enum ThreeBuyersS3 {
-    Valid(Valid, Send<C, Empty5, End>),
-    Quit(Quit, End),
+#[derive(Copy, Clone)]
+struct Request(i32);
+
+impl From<Request> for Value {
+    fn from(value: Request) -> Value {
+        let Request(val) = value;
+        val
+    }
 }
 
-#[session]
-type ThreeBuyersA = Send<S, Empty1, Receive<S, Empty2, Send<C, Empty4, Branch<C, ThreeBuyersA3>>>>;
+#[derive(Copy, Clone)]
+struct QuoteAlice(i32);
 
-#[session]
+impl From<QuoteAlice> for Value {
+    fn from(value: QuoteAlice) -> Value {
+        let QuoteAlice(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct ParticipationBob(i32);
+
+impl From<ParticipationBob> for Value {
+    fn from(value: ParticipationBob) -> Value {
+        let ParticipationBob(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct ConfirmAlice(i32);
+
+impl From<ConfirmAlice> for Value {
+    fn from(value: ConfirmAlice) -> Value {
+        let ConfirmAlice(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct QuitAlice(i32);
+
+impl From<QuitAlice> for Value {
+    fn from(value: QuitAlice) -> Value {
+        let QuitAlice(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct QuoteBob(i32);
+
+impl From<QuoteBob> for Value {
+    fn from(value: QuoteBob) -> Value {
+        let QuoteBob(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct ConfirmSeller(i32);
+
+impl From<ConfirmSeller> for Value {
+    fn from(value: ConfirmSeller) -> Value {
+        let ConfirmSeller(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct Date(i32);
+
+impl From<Date> for Value {
+    fn from(value: Date) -> Value {
+        let Date(val) = value;
+        val
+    }
+}
+
+#[derive(Copy, Clone)]
+struct QuitSeller(i32);
+
+impl From<QuitSeller> for Value {
+    fn from(value: QuitSeller) -> Value {
+        let QuitSeller(val) = value;
+        val
+    }
+}
+
+#[session(Name, Value)]
+type ThreeBuyersA = Send<S, 'r', Request, Tautology::<Name, Value, Request>, Constant<Name, Value>, Receive<S, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Constant<Name, Value>, Send<B, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Constant<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Constant<Name, Value>, ThreeBuyersA3>>>>;
+
+#[session(Name, Value)]
 enum ThreeBuyersA3 {
-    Quit(Quit, End),
-    Valid(Valid, End),
+    QuitAlice(QuitAlice, End),
+    ConfirmAlice(ConfirmAlice, End),
+}
+
+impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for ThreeBuyersA3<'__r, __R> {
+    fn get_param(l: &Label) -> (Name, Value) {
+        match l {
+            Label::QuitAlice(QuitAlice(val)) => {
+                    ('c', *val)
+            }
+            Label::ConfirmAlice(ConfirmAlice(val)) => {
+                    ('c', *val)
+            }
+            _ => panic!("Unexpected label"),
+        }
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<QuitAlice, Name> for ThreeBuyersA3<'__r, __R> {
+    fn get_param_name() -> Name {
+        'c'
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<ConfirmAlice, Name> for ThreeBuyersA3<'__r, __R> {
+    fn get_param_name() -> Name {
+        'c'
+    }
+}
+
+#[derive(Default)]
+struct ThreeBuyersA3Predicate {}
+impl Predicate for ThreeBuyersA3Predicate {
+    type Name = Name;
+    type Value = Value;
+    type Label = Label;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        label: Option<&Self::Label>
+    ) -> Result<(), Self::Error> {
+        if let Some(label) = label {
+            match label {
+                Label::QuitAlice(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                Label::ConfirmAlice(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                _ => {
+                    Err(())
+                }
+            }
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[session(Name, Value)]
+type ThreeBuyersB = Receive<S, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Constant<Name, Value>, Receive<A, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Constant<Name, Value>, Select<A, ThreeBuyersB2Predicate, Constant<Name, Value>, ThreeBuyersB2>>>;
+
+#[session(Name, Value)]
+enum ThreeBuyersB2 {
+    QuitAlice(QuitAlice, Send<S, 's', QuitSeller, Tautology::<Name, Value, QuitSeller>, Constant<Name, Value>, End>),
+    ConfirmAlice(ConfirmAlice, Send<S, 's', ConfirmSeller, Tautology::<Name, Value, ConfirmSeller>, Constant<Name, Value>, Receive<S, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>>),
+}
+
+impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for ThreeBuyersB2<'__r, __R> {
+    fn get_param(l: &Label) -> (Name, Value) {
+        match l {
+            Label::QuitAlice(QuitAlice(val)) => {
+                    ('c', *val)
+            }
+            Label::ConfirmAlice(ConfirmAlice(val)) => {
+                    ('c', *val)
+            }
+            _ => panic!("Unexpected label"),
+        }
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<QuitAlice, Name> for ThreeBuyersB2<'__r, __R> {
+    fn get_param_name() -> Name {
+        'c'
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<ConfirmAlice, Name> for ThreeBuyersB2<'__r, __R> {
+    fn get_param_name() -> Name {
+        'c'
+    }
+}
+
+#[derive(Default)]
+struct ThreeBuyersB2Predicate {}
+impl Predicate for ThreeBuyersB2Predicate {
+    type Name = Name;
+    type Value = Value;
+    type Label = Label;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        label: Option<&Self::Label>
+    ) -> Result<(), Self::Error> {
+        if let Some(label) = label {
+            match label {
+                Label::QuitAlice(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                Label::ConfirmAlice(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                _ => {
+                    Err(())
+                }
+            }
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[session(Name, Value)]
+type ThreeBuyersS = Receive<A, 'r', Request, Tautology::<Name, Value, Request>, Constant<Name, Value>, Send<A, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Constant<Name, Value>, Send<B, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Constant<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Constant<Name, Value>, ThreeBuyersS3>>>>;
+
+#[session(Name, Value)]
+enum ThreeBuyersS3 {
+    ConfirmSeller(ConfirmSeller, Send<B, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>),
+    QuitSeller(QuitSeller, End),
+}
+
+impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for ThreeBuyersS3<'__r, __R> {
+    fn get_param(l: &Label) -> (Name, Value) {
+        match l {
+            Label::ConfirmSeller(ConfirmSeller(val)) => {
+                    ('s', *val)
+            }
+            Label::QuitSeller(QuitSeller(val)) => {
+                    ('s', *val)
+            }
+            _ => panic!("Unexpected label"),
+        }
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<ConfirmSeller, Name> for ThreeBuyersS3<'__r, __R> {
+    fn get_param_name() -> Name {
+        's'
+    }
+}
+impl<'__r, __R: ::rumpsteak::Role> ParamName<QuitSeller, Name> for ThreeBuyersS3<'__r, __R> {
+    fn get_param_name() -> Name {
+        's'
+    }
+}
+
+#[derive(Default)]
+struct ThreeBuyersS3Predicate {}
+impl Predicate for ThreeBuyersS3Predicate {
+    type Name = Name;
+    type Value = Value;
+    type Label = Label;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        label: Option<&Self::Label>
+    ) -> Result<(), Self::Error> {
+        if let Some(label) = label {
+            match label {
+                Label::ConfirmSeller(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                Label::QuitSeller(_) => {
+                    Tautology::<Name, Value, Label>::default()
+                        .check(m, Some(label))
+                    },
+                _ => {
+                    Err(())
+                }
+            }
+        } else {
+            Err(())
+        }
+    }
 }

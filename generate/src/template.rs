@@ -12,24 +12,131 @@ pub(crate) struct Route(pub usize);
 
 #[derive(Clone, Debug)]
 pub(crate) enum Predicate {
-    LTnVar(String, String),
-    LTnConst(String, String),
-    GTnVar(String, String),
-    GTnConst(String, String),
-    EqualVar(String, String),
-    EqualConst(String, String),
-    LTnThree(String, String, String),
-    GTnThree(String, String, String),
-    None,
+    LTnVar(String, String, Option<String>),
+    LTnConst(String, String, Option<String>),
+    GTnVar(String, String, Option<String>),
+    GTnConst(String, String, Option<String>),
+    EqualVar(String, String, Option<String>),
+    EqualConst(String, String, Option<String>),
+    Tautology(Option<String>),
+}
+
+impl Display for Predicate {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Predicate::LTnVar(param, value, label) => {
+		match label {
+			None => write!(f, "LTnVar::<Value, Label, '{}', '{}'>", param, value),
+			Some(l) => write!(f, "LTnVar::<Value, {}, '{}', '{}'>", l, param, value),
+		}
+            }
+            Predicate::LTnConst(param, value, label) => {
+		match label {
+			None => write!(f, "LTnConst::<Label, '{}', {}>", param, value),
+			Some(l) => write!(f, "LTnConst::<{}, '{}', {}>", l, param, value),
+		}
+            }
+            Predicate::GTnVar(param, value, label) => {
+		match label {
+			None => write!(f, "GTnVar::<Value, Label, '{}', '{}'>", param, value),
+			Some(l) => write!(f, "GTnVar::<Value, {}, '{}', '{}'>", l, param, value),
+		}
+            }
+            Predicate::GTnConst(param, value, label) => {
+		match label {
+			None => write!(f, "GTnConst::<Label, '{}', {}>", param, value),
+			Some(l) => write!(f, "GTnConst::<{}, '{}', {}>", l, param, value),
+		}
+            }
+            Predicate::EqualVar(param, value, label) => {
+		match label {
+			None => write!(f, "EqualVar::<Value, Label, '{}', '{}'>", param, value),
+			Some(l) => write!(f, "EqualVar::<Value, {}, '{}', '{}'>", l, param, value),
+		}
+            }
+            Predicate::EqualConst(param, value, label) => {
+		match label {
+			None => write!(f, "EqualConst::<Label, '{}', {}>", param, value),
+			Some(l) => write!(f, "EqualConst::<{}, '{}', {}>", l, param, value),
+		}
+            }
+            Predicate::Tautology(label) => {
+                match label {
+                    None => write!(f, "Tautology::<Name, Value, Label>"),
+                    Some(l) => write!(f, "Tautology::<Name, Value, {}>", l),
+                }
+            }
+        }
+    }
+}
+
+impl Predicate {
+    fn set_label_str(&mut self, label: String) {
+        match self {
+	    Predicate::LTnVar(_, _, opt) |
+	    Predicate::LTnConst(_, _, opt) |
+	    Predicate::GTnVar(_, _, opt) |
+	    Predicate::GTnConst(_, _, opt) |
+	    Predicate::EqualVar(_, _, opt) |
+	    Predicate::EqualConst(_, _, opt) |
+            Predicate::Tautology(opt) => {
+                opt.insert(label);
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
 pub(in crate) enum BoolPredicate {
     Normal(Predicate),
-    And(Predicate, Predicate),
-    Or(Predicate, Predicate),
-    Neg(Predicate),
-    None,
+    And(Option<String>, Box<BoolPredicate>, Box<BoolPredicate>),
+    Or(Option<String>, Box<BoolPredicate>, Box<BoolPredicate>),
+    Neg(Option<String>, Box<BoolPredicate>),
+}
+
+impl Display for BoolPredicate {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            BoolPredicate::Normal(a) => {
+                write!(f, "{}", a)
+            }
+            BoolPredicate::Neg(l, a) => {
+                match l {
+                Some(l) => write!(f, "Neg::<{}, {}, Name, Value>", l, a),
+                None => write!(f, "Neg::<Label, {}, Name, Value>", a),
+                }
+            }
+            BoolPredicate::And(_l, a, b) => {
+                write!(f, "And<{}, {}>", a, b)
+            }
+            BoolPredicate::Or(l, a, b) => {
+                match l {
+                    Some(l) => 
+                        write!(f, "Or<{}, {}, {}, Name, Value>", l, a, b),
+                    None =>
+                        write!(f, "Or<Label, {}, {}, Name, Value>", a, b),
+                }
+            }
+        }
+    }
+}
+
+impl BoolPredicate {
+    fn set_label_str(&mut self, label: String) {
+        match self {
+            BoolPredicate::Normal(p) => p.set_label_str(label),
+            BoolPredicate::Neg(l, p) => {
+                l.insert(label.clone());
+                p.set_label_str(label)
+            },
+            BoolPredicate::And(l, p1, p2) |
+                BoolPredicate::Or(l, p1, p2) => {
+                    l.insert(label.clone());
+                    p1.set_label_str(label.clone());
+                    p2.set_label_str(label)
+                }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -104,115 +211,19 @@ impl<'a> TypeFormatter<'a> {
         &self.labels[*label].camel
     }
 
+    fn param_names(&self, label: &usize) -> Vec<&str> {
+        self.labels[*label].param_names
+            .iter()
+            .map(|s| s as &str)
+            .collect()
+    }
+
     fn node(&self, node: &usize) -> &str {
         &self.role.nodes[*node]
     }
 
-    fn pred(&self, predicate: &Predicate) -> String {
-        match predicate {
-            Predicate::LTnVar(param, value) => {
-                let mut pred = String::from("LTnVar<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', '";
-                pred = pred + value;
-                pred = pred + "'>";
-                return pred;
-            }
-            Predicate::LTnConst(param, value) => {
-                let mut pred = String::from("LTnConst<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', ";
-                pred = pred + value;
-                pred = pred + ">";
-                return pred;
-            }
-            Predicate::GTnVar(param, value) => {
-                let mut pred = String::from("GTnVar<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', '";
-                pred = pred + value;
-                pred = pred + "'>";
-                return pred;
-            }
-            Predicate::GTnConst(param, value) => {
-                let mut pred = String::from("GTnConst<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', ";
-                pred = pred + value;
-                pred = pred + ">";
-                return pred;
-            }
-            Predicate::EqualVar(param, value) => {
-                let mut pred = String::from("EqualVar<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', '";
-                pred = pred + value;
-                pred = pred + "'>";
-                return pred;
-            }
-            Predicate::EqualConst(param, value) => {
-                let mut pred = String::from("EqualConst<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', ";
-                pred = pred + value;
-                pred = pred + ">";
-                return pred;
-            }
-            Predicate::LTnThree(param, value1, value2) => {
-                let mut pred = String::from("LTnThreeVar<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', '";
-                pred = pred + value1;
-                pred = pred + "', '";
-                pred = pred + value2;
-                pred = pred + "'>";
-                return pred;
-            }
-            Predicate::GTnThree(param, value1, value2) => {
-                let mut pred = String::from("GTnThreeVar<Value, '");
-                pred = pred + param.as_str();
-                pred = pred + "', '";
-                pred = pred + value1;
-                pred = pred + "', '";
-                pred = pred + value2;
-                pred = pred + "'>";
-                return pred;
-            }
-            Predicate::None => (),
-        }
-        return "Tautology<Name, Value>".to_string();
-    }
-
     fn boolpred(&self, predicate: &BoolPredicate) -> String {
-        match predicate {
-            BoolPredicate::Normal(a) => {
-                return self.pred(a);
-            }
-            BoolPredicate::Neg(a) => {
-                let mut pred = String::from("Neg<");
-                pred = pred + &self.pred(a);
-                pred = pred + ">";
-                return pred;
-            }
-            BoolPredicate::And(a, b) => {
-                let mut pred = String::from("And<");
-                pred = pred + &self.pred(a);
-                pred = pred + ", ";
-                pred = pred + &self.pred(b);
-                pred = pred + ">";
-                return pred;
-            }
-            BoolPredicate::Or(a, b) => {
-                let mut pred = String::from("Or<");
-                pred = pred + &self.pred(a);
-                pred = pred + ", ";
-                pred = pred + &self.pred(b);
-                pred = pred + ">";
-                return pred;
-            }
-            _ => (),
-        }
-        return "Tautology<Name, Value>".to_string();
+        predicate.to_string()
     }
 
     fn effect(&self, side_effect: &SideEffect) -> String {
@@ -271,23 +282,26 @@ impl Display for TypeFormatter<'_> {
                 side_effect,
                 next,
             } => {
-                let (other, label, pred, effect, next) = (
+                let (other, param_name, label, effect, next) = (
                     self.role(role),
+                    self.param_names(label).iter().next().unwrap().clone(),
                     self.label(label),
-                    self.boolpred(predicate),
                     self.effect(side_effect),
                     self.with(next),
                 );
+                let mut predicate = predicate.clone();
+                predicate.set_label_str(label.to_string());
+                let pred = self.boolpred(&mut predicate);
                 match direction {
                     Direction::Send => write!(
                         f,
-                        "Send<{}, {}, {}, {}, {}>",
-                        other, label, pred, effect, next
+                        "Send<{}, '{}', {}, {}, {}, {}>",
+                        other, param_name, label, pred, effect, next
                     ),
                     Direction::Receive => write!(
                         f,
-                        "Receive<{}, {}, {}, {}, {}>",
-                        other, label, pred, effect, next
+                        "Receive<{}, '{}', {}, {}, {}, {}>",
+                        other, param_name, label, pred, effect, next
                     ),
                 }
             }
@@ -298,7 +312,6 @@ impl Display for TypeFormatter<'_> {
                 predicate,
                 side_effect,
             } => {
-                let other = self.role(role);
                 let (other, name, role, node, pred, effect) = (
                     self.role(role),
                     self.name,
@@ -311,8 +324,8 @@ impl Display for TypeFormatter<'_> {
                     Direction::Send => {
                         write!(
                             f,
-                            "Select<{}, {}, {}, {}{}{}>",
-                            other, pred, effect, name, role, node
+                            "Select<{}, {}{}{}Predicate, {}, {}{}{}>",
+                            other, name, role, node, effect, name, role, node
                         )
                     }
                     Direction::Receive => {
@@ -332,6 +345,7 @@ impl Display for TypeFormatter<'_> {
 pub(crate) struct Choice {
     pub label: usize,
     pub ty: Type,
+    pub predicate: BoolPredicate,
 }
 
 #[derive(Debug)]
