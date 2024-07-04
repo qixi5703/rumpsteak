@@ -1,0 +1,16 @@
+(*# RefinementTypes #*)
+
+global protocol DiffieHellman(role A, role B, role G)
+{
+	GeneratorA(g: int) from G to A;
+	GeneratorB(h: int {h = g}) from A to B;
+
+	PrimeA(p: int) from G to A;
+	PrimeB(q: int {q = p}) from A to B;
+
+	PrivateKeyA(a: int) from G to A;
+	PrivateKeyB(b: int) from G to B;
+
+	SharedA(A: int {A = (g^a)%p}) from A to B;
+	SharedB(B: int {B = (h^b)%q}) from B to A;
+}

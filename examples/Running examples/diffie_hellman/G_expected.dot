@@ -1,0 +1,15 @@
+digraph G {
+  0;
+  1;
+  2;
+  3;
+  4;
+  
+  
+  0 -> 1 [label="A!GeneratorA(g: i32)", ];
+  1 -> 2 [label="A!PrimeA(p: i32)", ];
+  2 -> 3 [label="A!PrivateKeyA(a: i32)", ];
+  3 -> 4 [label="B!PrivateKeyB(b: i32)", ];
+  
+  }
+

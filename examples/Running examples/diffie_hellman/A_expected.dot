@@ -1,0 +1,21 @@
+digraph A {
+  0;
+  1;
+  2;
+  3;
+  4;
+  5;
+  6;
+  7;
+  
+  
+  0 -> 1 [label="G?GeneratorA(g: i32)", ];
+  1 -> 2 [label="B!GeneratorB(h: i32{h = g})", ];
+  2 -> 3 [label="G?PrimeA(p: i32)", ];
+  3 -> 4 [label="B!PrimeB(q: i32{q = p})", ];
+  4 -> 5 [label="G?PrivateKeyA(a: i32)", ];
+  5 -> 6 [label="B!SharedA(A: i32{A = ((g ^ a) % p)})", ];
+  6 -> 7 [label="B?SharedB(B: i32)", ];
+  
+  }
+
