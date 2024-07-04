@@ -11,6 +11,39 @@ use std::{
 pub(crate) struct Route(pub usize);
 
 #[derive(Clone, Debug)]
+pub(crate) enum Atom {
+    Var(String),
+    Const(String),
+}
+
+impl Display for Atom {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Atom::Var(name) => write!(f, "Variable<'{}'>", name),
+            Atom::Const(value) => write!(f, "Constant<'{}'>", value),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum IntExpr {
+    Atom(Atom),
+    Exponential { lhs: Box<IntExpr>, rhs: Box<IntExpr> },
+    Modulo { lhs: Box<IntExpr>, rhs: Box<IntExpr> },
+}
+
+impl Display for IntExpr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            IntExpr::Atom(a) => write!(f, "{}", a),
+            IntExpr::Exponential { lhs, rhs } => write!(f, "Exponent<{}, {}>", lhs, rhs),
+            IntExpr::Modulo { lhs, rhs } => write!(f, "Modulo<{}, {}>", lhs, rhs),
+        }
+    }
+}
+
+
+#[derive(Clone, Debug)]
 pub(crate) enum Predicate {
     LTnVar(String, String, Option<String>),
     LTnConst(String, String, Option<String>),
@@ -19,6 +52,9 @@ pub(crate) enum Predicate {
     EqualVar(String, String, Option<String>),
     EqualConst(String, String, Option<String>),
     Tautology(Option<String>),
+    LTn(IntExpr, IntExpr, Option<String>),
+    GTn(IntExpr, IntExpr, Option<String>),
+    Equal(IntExpr, IntExpr, Option<String>),
 }
 
 impl Display for Predicate {
@@ -66,6 +102,13 @@ impl Display for Predicate {
                     Some(l) => write!(f, "Tautology::<Name, Value, {}>", l),
                 }
             }
+            Predicate::Equal(lhs, rhs, label) => {
+		match label {
+			None => write!(f, "Equal::<Value, char, Label, '{}', '{}'>", lhs, rhs),
+			Some(l) => write!(f, "Equal::<Value, char, {}, '{}', '{}'>", l, lhs, rhs),
+		}
+            }
+            _ => unimplemented!()
         }
     }
 }
@@ -73,6 +116,9 @@ impl Display for Predicate {
 impl Predicate {
     fn set_label_str(&mut self, label: String) {
         match self {
+            Predicate::LTn(_, _, opt) |
+            Predicate::GTn(_, _, opt) |
+            Predicate::Equal(_, _, opt) |
 	    Predicate::LTnVar(_, _, opt) |
 	    Predicate::LTnConst(_, _, opt) |
 	    Predicate::GTnVar(_, _, opt) |

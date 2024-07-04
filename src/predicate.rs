@@ -446,7 +446,7 @@ impl<L, LHS: Predicate<Name = N, Value = V, Error = ()>, N, V> Predicate for Neg
     }
 }
 
-trait IntExpr: Default {
+pub trait IntExpr: Default {
     type Name;
     type Value;
     type Error;
@@ -457,9 +457,9 @@ trait IntExpr: Default {
 }
 
 #[derive(Default)]
-struct Value<const VAR: char> {}
+pub struct Variable<const VAR: char> {}
 
-impl<const VAR: char> IntExpr for Value<VAR> {
+impl<const VAR: char> IntExpr for Variable<VAR> {
     type Name = char;
     type Value = i32;
     type Error = ();
@@ -472,7 +472,7 @@ impl<const VAR: char> IntExpr for Value<VAR> {
 }
 
 #[derive(Default)]
-struct Constant<const CST: i32> {}
+pub struct Constant<const CST: i32> {}
 
 impl<const CST: i32> IntExpr for Constant<CST> {
     type Name = char;
@@ -487,7 +487,7 @@ impl<const CST: i32> IntExpr for Constant<CST> {
 }
 
 #[derive(Default)]
-struct Exponent<LHS, RHS> 
+pub struct Exponent<LHS, RHS> 
 where LHS: IntExpr,
       RHS: IntExpr
 {
@@ -514,7 +514,7 @@ where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
 }
 
 #[derive(Default)]
-struct Modulo<LHS, RHS>
+pub struct Modulo<LHS, RHS>
 where LHS: IntExpr,
       RHS: IntExpr
 {

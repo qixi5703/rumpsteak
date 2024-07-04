@@ -325,6 +325,15 @@ mod label {
         Const(String),
     }
 
+    impl Into<super::super::Atom> for Atom{
+        fn into(self) -> super::super::Atom{
+            match self {
+                Atom::Var(s) => super::super::Atom::Var(s),
+                Atom::Const(s) => super::super::Atom::Const(s),
+            }
+        }
+    }
+
     impl Atom {
         pub (in crate) fn parse<'a>(p: Pair<'a, Rule>) -> Result<Self, ()> {
             match p.as_rule() {
@@ -345,64 +354,22 @@ mod label {
 
     #[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
     pub(in crate) enum Predicate {
-        LTn(Atom, Atom),
-        GTn(Atom, Atom),
-        Equal(Atom, Atom),
+        LTn(IntExpr, IntExpr),
+        GTn(IntExpr, IntExpr),
+        Equal(IntExpr, IntExpr),
     }
 
     impl Into<super::super::Predicate> for Predicate {
         fn into(self) -> super::super::Predicate {
             match self {
                 Predicate::LTn(a, b) => {
-                    match a {
-                        Atom::Var(a_name) => {
-                            match b {
-                                Atom::Var(b_name) => {
-                                    super::super::Predicate::LTnVar(a_name, b_name, None)
-                                }
-                                Atom::Const(val) => {
-                                    super::super::Predicate::LTnConst(a_name, val, None)
-                                }
-                            }
-                        }
-                        Atom::Const(val) => {
-                            panic!()
-                        }
-                    }
+                    super::super::Predicate::LTn(a.into(), b.into(), None)
                 }
                 Predicate::GTn(a, b) => {
-                    match a {
-                        Atom::Var(a_name) => {
-                            match b {
-                                Atom::Var(b_name) => {
-                                    super::super::Predicate::GTnVar(a_name, b_name, None)
-                                }
-                                Atom::Const(val) => {
-                                    super::super::Predicate::GTnConst(a_name, val, None)
-                                }
-                            }
-                        }
-                        Atom::Const(val) => {
-                            panic!()
-                        }
-                    }
+                    super::super::Predicate::GTn(a.into(), b.into(), None)
                 }
                 Predicate::Equal(a, b) => {
-                    match a {
-                        Atom::Var(a_name) => {
-                            match b {
-                                Atom::Var(b_name) => {
-                                    super::super::Predicate::EqualVar(a_name, b_name, None)
-                                }
-                                Atom::Const(val) => {
-                                    super::super::Predicate::EqualConst(a_name, val, None)
-                                }
-                            }
-                        }
-                        Atom::Const(val) => {
-                            panic!()
-                        }
-                    }
+                    super::super::Predicate::Equal(a.into(), b.into(), None)
                 }
             }
         }
@@ -412,9 +379,9 @@ mod label {
         pub(in crate) fn parse<'a>(p: Pair<'a, Rule>) -> Result<Self, ()> {
             if let Rule::comp = p.as_rule() {
                 let mut inner = p.into_inner();
-                let lhs: Atom = Atom::parse(inner.next().unwrap())?;
+                let lhs = IntExpr::parse(inner.next().unwrap())?;
                 let op = inner.next().unwrap();
-                let rhs: Atom = Atom::parse(inner.next().unwrap())?;
+                let rhs = IntExpr::parse(inner.next().unwrap())?;
 
                 match op.as_rule() {
                     Rule::ltn => {
@@ -503,7 +470,6 @@ mod label {
                     }
                 }
                 _ => {
-                    println!("{:#?}", p);
                     return Err(())
                 },
             }
@@ -529,6 +495,49 @@ mod label {
                     super::super::BoolPredicate::Neg(None, Box::new(inner.into()))
                 },
                 BoolPredicate::Tautology => super::super::BoolPredicate::Normal(super::super::Predicate::Tautology(None)),
+            }
+        }
+    }
+
+    #[derive(Hash, Eq, PartialEq, Ord, PartialOrd, Debug, Clone)]
+    pub (in crate) enum IntExpr {
+        Atom(Atom),
+        Exponential{ lhs: Box<IntExpr>, rhs: Box<IntExpr> },
+        Modulo{ lhs: Box<IntExpr>, rhs: Box<IntExpr> },
+    }
+
+    impl Into<super::super::IntExpr> for IntExpr {
+        fn into(self) -> super::super::IntExpr{
+            match self {
+                IntExpr::Atom(a) => super::super::IntExpr::Atom(a.into()),
+                IntExpr::Exponential{ lhs, rhs } => {
+                    super::super::IntExpr::Exponential{ lhs: Box::new((*lhs).into()), rhs: Box::new((*rhs).into()) }
+                },
+                IntExpr::Modulo{ lhs, rhs } => super::super::IntExpr::Modulo{ lhs: Box::new((*lhs).into()), rhs: Box::new((*rhs).into()) } ,
+            }
+        }
+    }
+
+    impl IntExpr {
+        pub(in crate) fn parse<'a>(p: Pair<'a, Rule>) -> Result<Self, ()> {
+            let mut inner = p.into_inner().next().unwrap();
+             match inner.as_rule() {
+                 Rule::exponent => {
+                     let mut inner = inner.into_inner();
+                     let lhs = IntExpr::parse(inner.next().unwrap())?;
+                     let rhs = IntExpr::parse(inner.next().unwrap())?;
+                     Ok(IntExpr::Exponential{ lhs: Box::new(lhs), rhs: Box::new(rhs)})
+                 }
+                 Rule::modulo => {
+                     let mut inner = inner.into_inner();
+                     let lhs = IntExpr::parse(inner.next().unwrap())?;
+                     let rhs = IntExpr::parse(inner.next().unwrap())?;
+                     Ok(IntExpr::Modulo{ lhs: Box::new(lhs), rhs: Box::new(rhs)})
+                 }
+                 Rule::variable | Rule::constant => {
+                     Ok(IntExpr::Atom(Atom::parse(inner)?))
+                 }
+                 _ => Err(())
             }
         }
     }
@@ -616,7 +625,9 @@ mod label {
                     match p.as_rule() {
                         Rule::predicate => {
                             if let Some(p) = p.into_inner().next() {
-                                predicate = BoolPredicate::parse(p).unwrap();
+                                if direction == Direction::Send {
+                                    predicate = BoolPredicate::parse(p).unwrap();
+                                }
                             }
                         }
                         Rule::side_effect => {

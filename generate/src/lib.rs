@@ -7,7 +7,7 @@ use self::{
     parser::Tree,
     template::{
         BoolPredicate, Choice, Definition, DefinitionBody, Label, Predicate, Role, Route,
-        SideEffect, Type,
+        SideEffect, Type, IntExpr, Atom
     },
 };
 use heck::{CamelCase, SnakeCase};

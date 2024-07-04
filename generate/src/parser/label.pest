@@ -12,10 +12,14 @@ atom = _{ variable | constant }
 send = { "!" }
 receive = { "?" }
 
+exponent = { "(" ~ intexpr ~ "^" ~ intexpr ~ ")" }
+modulo = { "(" ~ intexpr ~ "%"  ~ intexpr ~ ")" }
+intexpr = { exponent | modulo | atom }
+
 ltn = { "<" }
 gtn = { ">" }
 eq = { "=" }
-comp = { atom ~ (ltn | gtn | eq) ~ atom }
+comp = { intexpr ~ (ltn | gtn | eq) ~ intexpr }
 
 and = { "(" ~ predicate ~ ")" ~ ( "∧" | "&&") ~ "(" ~ predicate ~ ")" }
 or = { "(" ~ predicate ~ ")" ~ ( "∨" | "||") ~ "(" ~ predicate ~ ")" }
