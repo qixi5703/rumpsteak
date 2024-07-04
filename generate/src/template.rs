@@ -104,8 +104,8 @@ impl Display for Predicate {
             }
             Predicate::Equal(lhs, rhs, label) => {
 		match label {
-			None => write!(f, "Equal::<Value, char, Label, '{}', '{}'>", lhs, rhs),
-			Some(l) => write!(f, "Equal::<Value, char, {}, '{}', '{}'>", l, lhs, rhs),
+			None => write!(f, "Equal::<Value, char, Label, {}, {}>", lhs, rhs),
+			Some(l) => write!(f, "Equal::<Value, char, {}, {}, {}>", l, lhs, rhs),
 		}
             }
             _ => unimplemented!()

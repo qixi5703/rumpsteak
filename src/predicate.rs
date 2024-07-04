@@ -467,7 +467,7 @@ impl<const VAR: char> IntExpr for Variable<VAR> {
     fn value(&self, 
         m: &HashMap<Self::Name, Self::Value>,
         ) -> Result<Self::Value, Self::Error> {
-        m.get(&VAR).ok_or(()).copied()
+        Ok(*m.get(&VAR).unwrap())
     }
 }
 
@@ -506,8 +506,7 @@ where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
         m: &HashMap<Self::Name, Self::Value>,
         ) -> Result<Self::Value, Self::Error> {
         let lhs = LHS::default().value(m)?;
-        let rhs: u32 = RHS::default().value(m)?.try_into().map_err(|_| ())?;
-
+        let rhs: u32 = RHS::default().value(m)?.try_into().unwrap();
         
         lhs.checked_pow(rhs).ok_or(())
     }
@@ -535,8 +534,8 @@ where LHS: IntExpr<Name = char, Value = i32, Error = ()>,
         let lhs = LHS::default().value(m)?;
         let rhs = RHS::default().value(m)?;
 
-        
-        lhs.checked_rem(rhs).ok_or(())
+        let res = lhs.checked_rem(rhs);
+        res.ok_or(())
     }
 }
 
