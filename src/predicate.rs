@@ -577,3 +577,81 @@ where
         }
     }
 }
+
+/// The `LTn` struct implements an less-than operator.
+pub struct LTn<V: Ord, N, L, LHS: IntExpr, RHS: IntExpr> {
+    _p: PhantomData<(V, N, L, LHS, RHS)>,
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Default for LTn<V, N, L, LHS, RHS> {
+    fn default() -> Self {
+        Self {
+            _p: PhantomData
+        }
+    }
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Predicate for LTn<V, N, L, LHS, RHS>
+where
+    V: std::cmp::Ord,
+    LHS: IntExpr<Name = N, Value = V, Error = ()>,
+    RHS: IntExpr<Name = N, Value = V, Error = ()>
+{
+    type Name = N;
+    type Value = V;
+    type Label = L;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        _l: Option<&Self::Label>,
+    ) -> Result<(), Self::Error> {
+        let lhs = LHS::default().value(m)?;
+        let rhs = RHS::default().value(m)?;
+        if lhs < rhs {
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+}
+
+/// The `GTn` struct implements an greater-than operator.
+pub struct GTn<V: Ord, N, L, LHS: IntExpr, RHS: IntExpr> {
+    _p: PhantomData<(V, N, L, LHS, RHS)>,
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Default for GTn<V, N, L, LHS, RHS> {
+    fn default() -> Self {
+        Self {
+            _p: PhantomData
+        }
+    }
+}
+
+impl<L, N, V: Ord, LHS: IntExpr, RHS: IntExpr> Predicate for GTn<V, N, L, LHS, RHS>
+where
+    V: std::cmp::Ord,
+    LHS: IntExpr<Name = N, Value = V, Error = ()>,
+    RHS: IntExpr<Name = N, Value = V, Error = ()>
+{
+    type Name = N;
+    type Value = V;
+    type Label = L;
+    type Error = ();
+
+    fn check(
+        &self,
+        m: &HashMap<Self::Name, Self::Value>,
+        _l: Option<&Self::Label>,
+    ) -> Result<(), Self::Error> {
+        let lhs = LHS::default().value(m)?;
+        let rhs = RHS::default().value(m)?;
+        if lhs > rhs {
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+}

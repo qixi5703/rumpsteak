@@ -108,7 +108,21 @@ impl Display for Predicate {
 			Some(l) => write!(f, "Equal::<Value, char, {}, {}, {}>", l, lhs, rhs),
 		}
             }
-            _ => unimplemented!()
+            Predicate::LTn(lhs, rhs, label) => {
+		match label {
+			None => write!(f, "LTn::<Value, char, Label, {}, {}>", lhs, rhs),
+			Some(l) => write!(f, "LTn::<Value, char, {}, {}, {}>", l, lhs, rhs),
+		}
+            }
+            Predicate::GTn(lhs, rhs, label) => {
+		match label {
+			None => write!(f, "GTn::<Value, char, Label, {}, {}>", lhs, rhs),
+			Some(l) => write!(f, "GTn::<Value, char, {}, {}, {}>", l, lhs, rhs),
+		}
+            }
+            _ => { 
+                unimplemented!("{:#?}", self)
+            }
         }
     }
 }
@@ -330,7 +344,7 @@ impl Display for TypeFormatter<'_> {
             } => {
                 let (other, param_name, label, effect, next) = (
                     self.role(role),
-                    self.param_names(label).iter().next().unwrap().clone(),
+                    *self.param_names(label).iter().next().unwrap(),
                     self.label(label),
                     self.effect(side_effect),
                     self.with(next),
