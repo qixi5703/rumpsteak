@@ -6,3 +6,4 @@ digraph A {
   0 -> 1 [label="B!Secret(n: i32)", ];
   
   }
+

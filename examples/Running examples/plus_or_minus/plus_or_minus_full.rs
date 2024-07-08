@@ -204,15 +204,15 @@ impl Predicate for PlusMinusB3Predicate {
         if let Some(label) = label {
             match label {
                 Label::Correct(_) => {
-                    EqualVar::<Value, Label, 'x', 'n'>::default()
+                    Equal::<Value, char, Label, Variable<'x'>, Variable<'n'>>::default()
                         .check(m, Some(label))
                     },
                 Label::More(_) => {
-                    LTnVar::<Value, Label, 'x', 'n'>::default()
+                    LTn::<Value, char, Label, Variable<'x'>, Variable<'n'>>::default()
                         .check(m, Some(label))
                     },
                 Label::Less(_) => {
-                    GTnVar::<Value, Label, 'x', 'n'>::default()
+                    GTn::<Value, char, Label, Variable<'x'>, Variable<'n'>>::default()
                         .check(m, Some(label))
                     },
                 _ => {
@@ -283,15 +283,15 @@ impl Predicate for PlusMinusC2Predicate {
         if let Some(label) = label {
             match label {
                 Label::Correct(_) => {
-                    EqualVar::<Value, Label, 'x', 'n'>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 Label::More(_) => {
-                    LTnVar::<Value, Label, 'x', 'n'>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 Label::Less(_) => {
-                    GTnVar::<Value, Label, 'x', 'n'>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 _ => {
