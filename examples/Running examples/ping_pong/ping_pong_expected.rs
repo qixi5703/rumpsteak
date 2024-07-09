@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -91,7 +91,7 @@ impl From<Pong> for Value {
 }
 
 #[session(Name, Value)]
-struct PingPongA(Send<B, 'x', Ping, Tautology<Name, Value, Ping>, Constant<Name, Value>, Receive<B, 'x', Pong, Tautology<Name, Value, Pong>, Constant<Name, Value>, PingPongA>>);
+struct PingPongA(Send<B, 'x', Ping, Tautology::<Name, Value, Ping>, Noop<Name, Value>, Receive<B, 'x', Pong, Tautology::<Name, Value, Pong>, Noop<Name, Value>, PingPongA>>);
 
 #[session(Name, Value)]
-struct PingPongB(Receive<A, 'x', Ping, Tautology<Name, Value, Ping>, Constant<Name, Value>, Send<A, 'x', Pong, Tautology<Name, Value, Pong>, Constant<Name, Value>, PingPongB>>);
+struct PingPongB(Receive<A, 'x', Ping, Tautology::<Name, Value, Ping>, Noop<Name, Value>, Send<A, 'x', Pong, Tautology::<Name, Value, Pong>, Noop<Name, Value>, PingPongB>>);

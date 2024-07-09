@@ -7,3 +7,4 @@ digraph A {
   2 -> 0 [label="B?Pong(x: i32)", ];
   
   }
+
