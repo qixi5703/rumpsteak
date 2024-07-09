@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -141,13 +141,13 @@ impl From<Correct> for Value {
 }
 
 #[session(Name, Value)]
-type PlusMinusA = Send<B, 'n', Secret, Tautology::<Name, Value, Secret>, Constant<Name, Value>, End>;
+type PlusMinusA = Send<B, 'n', Secret, Tautology::<Name, Value, Secret>, Noop<Name, Value>, End>;
 
 #[session(Name, Value)]
-type PlusMinusB = Receive<A, 'n', Secret, Tautology::<Name, Value, Secret>, Constant<Name, Value>, PlusMinusB1>;
+type PlusMinusB = Receive<A, 'n', Secret, Tautology::<Name, Value, Secret>, Noop<Name, Value>, PlusMinusB1>;
 
 #[session(Name, Value)]
-type PlusMinusB1 = Receive<C, 'x', Guess, Tautology::<Name, Value, Guess>, Constant<Name, Value>, Select<C, PlusMinusB3Predicate, Constant<Name, Value>, PlusMinusB3>>;
+type PlusMinusB1 = Receive<C, 'x', Guess, Tautology::<Name, Value, Guess>, Noop<Name, Value>, Select<C, PlusMinusB3Predicate, Noop<Name, Value>, PlusMinusB3>>;
 
 #[session(Name, Value)]
 enum PlusMinusB3 {
@@ -226,7 +226,7 @@ impl Predicate for PlusMinusB3Predicate {
 }
 
 #[session(Name, Value)]
-type PlusMinusC = Send<B, 'x', Guess, Tautology::<Name, Value, Guess>, Constant<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Constant<Name, Value>, PlusMinusC2>>;
+type PlusMinusC = Send<B, 'x', Guess, Tautology::<Name, Value, Guess>, Noop<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Noop<Name, Value>, PlusMinusC2>>;
 
 #[session(Name, Value)]
 enum PlusMinusC2 {
