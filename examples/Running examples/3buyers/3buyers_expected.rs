@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -189,7 +189,7 @@ impl From<QuitSeller> for Value {
 }
 
 #[session(Name, Value)]
-type ThreeBuyersA = Send<S, 'r', Request, Tautology::<Name, Value, Request>, Constant<Name, Value>, Receive<S, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Constant<Name, Value>, Send<B, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Constant<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Constant<Name, Value>, ThreeBuyersA3>>>>;
+type ThreeBuyersA = Send<S, 'r', Request, Tautology::<Name, Value, Request>, Noop<Name, Value>, Receive<S, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Noop<Name, Value>, Send<B, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Noop<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Noop<Name, Value>, ThreeBuyersA3>>>>;
 
 #[session(Name, Value)]
 enum ThreeBuyersA3 {
@@ -255,12 +255,12 @@ impl Predicate for ThreeBuyersA3Predicate {
 }
 
 #[session(Name, Value)]
-type ThreeBuyersB = Receive<S, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Constant<Name, Value>, Receive<A, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Constant<Name, Value>, Select<A, ThreeBuyersB2Predicate, Constant<Name, Value>, ThreeBuyersB2>>>;
+type ThreeBuyersB = Receive<S, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Noop<Name, Value>, Receive<A, 'p', ParticipationBob, Tautology::<Name, Value, ParticipationBob>, Noop<Name, Value>, Select<A, ThreeBuyersB2Predicate, Noop<Name, Value>, ThreeBuyersB2>>>;
 
 #[session(Name, Value)]
 enum ThreeBuyersB2 {
-    QuitAlice(QuitAlice, Send<S, 's', QuitSeller, Tautology::<Name, Value, QuitSeller>, Constant<Name, Value>, End>),
-    ConfirmAlice(ConfirmAlice, Send<S, 's', ConfirmSeller, Tautology::<Name, Value, ConfirmSeller>, Constant<Name, Value>, Receive<S, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>>),
+    QuitAlice(QuitAlice, Send<S, 's', QuitSeller, Tautology::<Name, Value, QuitSeller>, Noop<Name, Value>, End>),
+    ConfirmAlice(ConfirmAlice, Send<S, 's', ConfirmSeller, Tautology::<Name, Value, ConfirmSeller>, Noop<Name, Value>, Receive<S, 'd', Date, Tautology::<Name, Value, Date>, Noop<Name, Value>, End>>),
 }
 
 impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for ThreeBuyersB2<'__r, __R> {
@@ -321,11 +321,11 @@ impl Predicate for ThreeBuyersB2Predicate {
 }
 
 #[session(Name, Value)]
-type ThreeBuyersS = Receive<A, 'r', Request, Tautology::<Name, Value, Request>, Constant<Name, Value>, Send<A, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Constant<Name, Value>, Send<B, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Constant<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Constant<Name, Value>, ThreeBuyersS3>>>>;
+type ThreeBuyersS = Receive<A, 'r', Request, Tautology::<Name, Value, Request>, Noop<Name, Value>, Send<A, 'a', QuoteAlice, Tautology::<Name, Value, QuoteAlice>, Noop<Name, Value>, Send<B, 'b', QuoteBob, Tautology::<Name, Value, QuoteBob>, Noop<Name, Value>, Branch<B, Tautology::<Name, Value, Label>, Noop<Name, Value>, ThreeBuyersS3>>>>;
 
 #[session(Name, Value)]
 enum ThreeBuyersS3 {
-    ConfirmSeller(ConfirmSeller, Send<B, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>),
+    ConfirmSeller(ConfirmSeller, Send<B, 'd', Date, Tautology::<Name, Value, Date>, Noop<Name, Value>, End>),
     QuitSeller(QuitSeller, End),
 }
 

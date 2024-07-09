@@ -18,3 +18,4 @@ digraph B {
   8 -> 9 [label="S!QuitSeller(s: i32)", ];
   
   }
+
