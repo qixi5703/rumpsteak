@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -261,22 +261,22 @@ impl From<ProposalF> for Value {
 }
 
 #[session(Name, Value)]
-type RingMaxA = Send<B, 'a', ProposalA, Tautology::<Name, Value, ProposalA>, Constant<Name, Value>, Receive<G, 'g', ProposalG, Or<ProposalG, EqualVar::<Value, Label, 'g', 'f'>, GTnVar::<Value, Label, 'g', 'f'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxA = Send<B, 'a', ProposalA, Tautology::<Name, Value, ProposalA>, Noop<Name, Value>, Receive<G, 'g', ProposalG, Tautology::<Name, Value, ProposalG>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxB = Receive<A, 'a', ProposalA, Tautology::<Name, Value, ProposalA>, Constant<Name, Value>, Send<C, 'b', ProposalB, Or<ProposalB, EqualVar::<Value, Label, 'b', 'a'>, GTnVar::<Value, Label, 'b', 'a'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxB = Receive<A, 'a', ProposalA, Tautology::<Name, Value, ProposalA>, Noop<Name, Value>, Send<C, 'b', ProposalB, Or<ProposalB, Equal::<Value, char, ProposalB, Variable<'b'>, Variable<'a'>>, GTn::<Value, char, ProposalB, Variable<'b'>, Variable<'a'>>, Name, Value>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxC = Receive<B, 'b', ProposalB, Or<ProposalB, EqualVar::<Value, Label, 'b', 'a'>, GTnVar::<Value, Label, 'b', 'a'>, Name, Value>, Constant<Name, Value>, Send<D, 'c', ProposalC, Or<ProposalC, EqualVar::<Value, Label, 'c', 'b'>, GTnVar::<Value, Label, 'c', 'b'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxC = Receive<B, 'b', ProposalB, Tautology::<Name, Value, ProposalB>, Noop<Name, Value>, Send<D, 'c', ProposalC, Or<ProposalC, Equal::<Value, char, ProposalC, Variable<'c'>, Variable<'b'>>, GTn::<Value, char, ProposalC, Variable<'c'>, Variable<'b'>>, Name, Value>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxD = Receive<C, 'c', ProposalC, Or<ProposalC, EqualVar::<Value, Label, 'c', 'b'>, GTnVar::<Value, Label, 'c', 'b'>, Name, Value>, Constant<Name, Value>, Send<E, 'd', ProposalD, Or<ProposalD, EqualVar::<Value, Label, 'd', 'c'>, GTnVar::<Value, Label, 'd', 'c'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxD = Receive<C, 'c', ProposalC, Tautology::<Name, Value, ProposalC>, Noop<Name, Value>, Send<E, 'd', ProposalD, Or<ProposalD, Equal::<Value, char, ProposalD, Variable<'d'>, Variable<'c'>>, GTn::<Value, char, ProposalD, Variable<'d'>, Variable<'c'>>, Name, Value>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxE = Receive<D, 'd', ProposalD, Or<ProposalD, EqualVar::<Value, Label, 'd', 'c'>, GTnVar::<Value, Label, 'd', 'c'>, Name, Value>, Constant<Name, Value>, Send<F, 'e', ProposalE, Or<ProposalE, EqualVar::<Value, Label, 'e', 'd'>, GTnVar::<Value, Label, 'e', 'd'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxE = Receive<D, 'd', ProposalD, Tautology::<Name, Value, ProposalD>, Noop<Name, Value>, Send<F, 'e', ProposalE, Or<ProposalE, Equal::<Value, char, ProposalE, Variable<'e'>, Variable<'d'>>, GTn::<Value, char, ProposalE, Variable<'e'>, Variable<'d'>>, Name, Value>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxF = Receive<E, 'e', ProposalE, Or<ProposalE, EqualVar::<Value, Label, 'e', 'd'>, GTnVar::<Value, Label, 'e', 'd'>, Name, Value>, Constant<Name, Value>, Send<G, 'f', ProposalF, Or<ProposalF, EqualVar::<Value, Label, 'f', 'e'>, GTnVar::<Value, Label, 'f', 'e'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxF = Receive<E, 'e', ProposalE, Tautology::<Name, Value, ProposalE>, Noop<Name, Value>, Send<G, 'f', ProposalF, Or<ProposalF, Equal::<Value, char, ProposalF, Variable<'f'>, Variable<'e'>>, GTn::<Value, char, ProposalF, Variable<'f'>, Variable<'e'>>, Name, Value>, Noop<Name, Value>, End>>;
 
 #[session(Name, Value)]
-type RingMaxG = Receive<F, 'f', ProposalF, Or<ProposalF, EqualVar::<Value, Label, 'f', 'e'>, GTnVar::<Value, Label, 'f', 'e'>, Name, Value>, Constant<Name, Value>, Send<A, 'g', ProposalG, Or<ProposalG, EqualVar::<Value, Label, 'g', 'f'>, GTnVar::<Value, Label, 'g', 'f'>, Name, Value>, Constant<Name, Value>, End>>;
+type RingMaxG = Receive<F, 'f', ProposalF, Tautology::<Name, Value, ProposalF>, Noop<Name, Value>, Send<A, 'g', ProposalG, Or<ProposalG, Equal::<Value, char, ProposalG, Variable<'g'>, Variable<'f'>>, GTn::<Value, char, ProposalG, Variable<'g'>, Variable<'f'>>, Name, Value>, Noop<Name, Value>, End>>;

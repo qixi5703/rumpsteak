@@ -4,8 +4,8 @@ digraph D {
   2;
   
   
-  0 -> 1 [label="C?ProposalC(c: i32{(c > b) || (c = b)})",
-          ];
+  0 -> 1 [label="C?ProposalC(c: i32)", ];
   1 -> 2 [label="E!ProposalD(d: i32{(d > c) || (d = c)})", ];
   
   }
+

@@ -8,3 +8,4 @@ digraph B {
   1 -> 2 [label="C!ProposalB(b: i32{(b > a) || (b = a)})", ];
   
   }
+

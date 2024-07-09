@@ -4,8 +4,9 @@ digraph G {
   2;
   
   
-  0 -> 1 [label="F?ProposalF(f: i32{(f > e) || (f = e)})",
+  0 -> 1 [label="F?ProposalF(f: i32)",
           ];
   1 -> 2 [label="A!ProposalG(g: i32{(g > f) || (g = f)})", ];
   
   }
+
