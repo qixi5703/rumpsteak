@@ -139,14 +139,14 @@ impl From<RetRes> for Value {
 }
 
 #[session(Name, Value)]
-type AuthC = Send<S, 'p', SetPw, Tautology<Name, Value, SetPw>, Constant<Name, Value>, AuthC1>;
+type AuthC = Send<S, 'p', SetPw, Tautology::<Name, Value, SetPw>, Constant<Name, Value>, AuthC1>;
 
 #[session(Name, Value)]
-type AuthC1 = Send<S, 'x', Password, Tautology<Name, Value, Password>, Constant<Name, Value>, Branch<S, Tautology<Name, Value, Label>, Constant<Name, Value>, AuthC3>>;
+type AuthC1 = Send<S, 'x', Password, Tautology::<Name, Value, Password>, Constant<Name, Value>, Branch<S, Tautology::<Name, Value, Label>, Constant<Name, Value>, AuthC3>>;
 
 #[session(Name, Value)]
 enum AuthC3 {
-    Failure(Failure, Receive<S, 'x', RetX, Tautology<Name, Value, RetX>, Constant<Name, Value>, Send<S, 'r', RetRes, Tautology<Name, Value, RetRes>, Constant<Name, Value>, AuthC1>>),
+    Failure(Failure, Receive<S, 'x', RetX, Tautology::<Name, Value, RetX>, Constant<Name, Value>, Send<S, 'r', RetRes, Tautology::<Name, Value, RetRes>, Constant<Name, Value>, AuthC1>>),
     Success(Success, End),
 }
 
@@ -190,11 +190,11 @@ impl Predicate for AuthC3Predicate {
         if let Some(label) = label {
             match label {
                 Label::Failure(_) => {
-                    Neg::<Label, EqualVar::<Value, Label, 'x', 'p'>, Name, Value>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 Label::Success(_) => {
-                    EqualVar::<Value, Label, 'x', 'p'>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 _ => {
@@ -208,14 +208,14 @@ impl Predicate for AuthC3Predicate {
 }
 
 #[session(Name, Value)]
-type AuthS = Receive<C, 'p', SetPw, Tautology<Name, Value, SetPw>, Constant<Name, Value>, AuthS1>;
+type AuthS = Receive<C, 'p', SetPw, Tautology::<Name, Value, SetPw>, Constant<Name, Value>, AuthS1>;
 
 #[session(Name, Value)]
-type AuthS1 = Receive<C, 'x', Password, Tautology<Name, Value, Password>, Constant<Name, Value>, Select<C, AuthS3Predicate, Constant<Name, Value>, AuthS3>>;
+type AuthS1 = Receive<C, 'x', Password, Tautology::<Name, Value, Password>, Constant<Name, Value>, Select<C, AuthS3Predicate, Constant<Name, Value>, AuthS3>>;
 
 #[session(Name, Value)]
 enum AuthS3 {
-    Failure(Failure, Send<C, 'x', RetX, Tautology<Name, Value, RetX>, Constant<Name, Value>, Receive<C, 'r', RetRes, Tautology<Name, Value, RetRes>, Constant<Name, Value>, AuthS1>>),
+    Failure(Failure, Send<C, 'x', RetX, Tautology::<Name, Value, RetX>, Constant<Name, Value>, Receive<C, 'r', RetRes, Tautology::<Name, Value, RetRes>, Constant<Name, Value>, AuthS1>>),
     Success(Success, End),
 }
 
@@ -259,11 +259,11 @@ impl Predicate for AuthS3Predicate {
         if let Some(label) = label {
             match label {
                 Label::Failure(_) => {
-                    Neg::<Label, EqualVar::<Value, Label, 'x', 'p'>, Name, Value>::default()
+                    Neg::<Label, Equal::<Value, char, Label, Variable<'x'>, Variable<'p'>>, Name, Value>::default()
                         .check(m, Some(label))
                     },
                 Label::Success(_) => {
-                    EqualVar::<Value, Label, 'x', 'p'>::default()
+                    Equal::<Value, char, Label, Variable<'x'>, Variable<'p'>>::default()
                         .check(m, Some(label))
                     },
                 _ => {
