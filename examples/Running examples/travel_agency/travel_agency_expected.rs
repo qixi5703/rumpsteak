@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -139,12 +139,12 @@ impl From<Date> for Value {
 }
 
 #[session(Name, Value)]
-type TravelAgencyC = Send<A, 'o', Order, Tautology::<Name, Value, Order>, Constant<Name, Value>, Receive<A, 'q', Quote, Tautology::<Name, Value, Quote>, Constant<Name, Value>, Select<A, TravelAgencyC2Predicate, Constant<Name, Value>, TravelAgencyC2>>>;
+type TravelAgencyC = Send<A, 'o', Order, Tautology::<Name, Value, Order>, Noop<Name, Value>, Receive<A, 'q', Quote, Tautology::<Name, Value, Quote>, Noop<Name, Value>, Select<A, TravelAgencyC2Predicate, Noop<Name, Value>, TravelAgencyC2>>>;
 
 #[session(Name, Value)]
 enum TravelAgencyC2 {
     Reject(Reject, End),
-    Accept(Accept, Send<A, 'a', Address, Tautology::<Name, Value, Address>, Constant<Name, Value>, Receive<A, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>>),
+    Accept(Accept, Send<A, 'a', Address, Tautology::<Name, Value, Address>, Noop<Name, Value>, Receive<A, 'd', Date, Tautology::<Name, Value, Date>, Noop<Name, Value>, End>>),
 }
 
 impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for TravelAgencyC2<'__r, __R> {
@@ -191,7 +191,7 @@ impl Predicate for TravelAgencyC2Predicate {
                         .check(m, Some(label))
                     },
                 Label::Accept(_) => {
-                    LTnConst::<Label, 'q', 100>::default()
+                    LTn::<Value, char, Label, Variable<'q'>, Constant<100>>::default()
                         .check(m, Some(label))
                     },
                 _ => {
@@ -205,12 +205,12 @@ impl Predicate for TravelAgencyC2Predicate {
 }
 
 #[session(Name, Value)]
-type TravelAgencyA = Receive<C, 'o', Order, Tautology::<Name, Value, Order>, Constant<Name, Value>, Send<C, 'q', Quote, Tautology::<Name, Value, Quote>, Constant<Name, Value>, Branch<C, Tautology::<Name, Value, Label>, Constant<Name, Value>, TravelAgencyA2>>>;
+type TravelAgencyA = Receive<C, 'o', Order, Tautology::<Name, Value, Order>, Noop<Name, Value>, Send<C, 'q', Quote, Tautology::<Name, Value, Quote>, Noop<Name, Value>, Branch<C, Tautology::<Name, Value, Label>, Noop<Name, Value>, TravelAgencyA2>>>;
 
 #[session(Name, Value)]
 enum TravelAgencyA2 {
     Reject(Reject, End),
-    Accept(Accept, Receive<C, 'a', Address, Tautology::<Name, Value, Address>, Constant<Name, Value>, Send<C, 'd', Date, Tautology::<Name, Value, Date>, Constant<Name, Value>, End>>),
+    Accept(Accept, Receive<C, 'a', Address, Tautology::<Name, Value, Address>, Noop<Name, Value>, Send<C, 'd', Date, Tautology::<Name, Value, Date>, Noop<Name, Value>, End>>),
 }
 
 impl<'__r, __R: ::rumpsteak::Role> Param<Name, Value, Label> for TravelAgencyA2<'__r, __R> {
@@ -257,7 +257,7 @@ impl Predicate for TravelAgencyA2Predicate {
                         .check(m, Some(label))
                     },
                 Label::Accept(_) => {
-                    LTnConst::<Label, 'q', 100>::default()
+                    Tautology::<Name, Value, Label>::default()
                         .check(m, Some(label))
                     },
                 _ => {
