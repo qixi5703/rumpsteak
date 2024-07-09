@@ -13,18 +13,18 @@ pub trait SideEffect: Default {
     fn side_effect(&mut self, _m: &mut HashMap<Self::Name, Self::Value>) {}
 }
 
-/// The `Constant` struct implements a side effect that does nothing.
-pub struct Constant<N, V> {
+/// The `Noop` struct implements a side effect that does nothing (No operation).
+pub struct Noop<N, V> {
     _ph: PhantomData<(N, V)>,
 }
 
-impl<N, V> Default for Constant<N, V> {
+impl<N, V> Default for Noop<N, V> {
     fn default() -> Self {
         Self { _ph: PhantomData }
     }
 }
 
-impl<N, V> SideEffect for Constant<N, V> {
+impl<N, V> SideEffect for Noop<N, V> {
     type Name = N;
     type Value = V;
 }

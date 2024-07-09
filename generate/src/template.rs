@@ -20,7 +20,7 @@ impl Display for Atom {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Atom::Var(name) => write!(f, "Variable<'{}'>", name),
-            Atom::Const(value) => write!(f, "Constant<'{}'>", value),
+            Atom::Const(value) => write!(f, "Constant<{}>", value),
         }
     }
 }
@@ -322,7 +322,7 @@ impl<'a> TypeFormatter<'a> {
             }
             SideEffect::None => (),
         }
-        return "Constant<Name, Value>".to_string();
+        return "Noop<Name, Value>".to_string();
     }
 }
 
