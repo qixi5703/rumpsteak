@@ -16,7 +16,7 @@ use ::rumpsteak::{
     Send,
     effect::{
         SideEffect,
-        Constant,
+        Noop,
         Incr,
     },
     try_session,
@@ -103,7 +103,7 @@ impl From<Res> for Value {
 }
 
 #[session(Name, Value)]
-type AdderC = Send<S, 'x', Lhs, Tautology<Name, Value, Lhs>, Constant<Name, Value>, Send<S, 'y', Rhs, Tautology<Name, Value, Rhs>, Constant<Name, Value>, Receive<S, 'r', Res, Tautology<Name, Value, Res>, Constant<Name, Value>, End>>>;
+type AdderC = Send<S, 'x', Lhs, Tautology::<Name, Value, Lhs>, Noop<Name, Value>, Send<S, 'y', Rhs, Tautology::<Name, Value, Rhs>, Noop<Name, Value>, Receive<S, 'r', Res, Tautology::<Name, Value, Res>, Noop<Name, Value>, End>>>;
 
 #[session(Name, Value)]
-type AdderS = Receive<C, 'x', Lhs, Tautology<Name, Value, Lhs>, Constant<Name, Value>, Receive<C, 'y', Rhs, Tautology<Name, Value, Rhs>, Constant<Name, Value>, Send<C, 'r', Res, Tautology<Name, Value, Res>, Constant<Name, Value>, End>>>;
+type AdderS = Receive<C, 'x', Lhs, Tautology::<Name, Value, Lhs>, Noop<Name, Value>, Receive<C, 'y', Rhs, Tautology::<Name, Value, Rhs>, Noop<Name, Value>, Send<C, 'r', Res, Tautology::<Name, Value, Res>, Noop<Name, Value>, End>>>;
